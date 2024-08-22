@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:haedal/home/alarm_page.dart';
+import 'package:haedal/literacy_test/literacy_test.dart';
 import 'package:haedal/theme/theme_manager.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart';
@@ -51,6 +53,8 @@ class MyApp extends StatelessWidget {
           '/mypage': (BuildContext context) => const MyPageMain(),
           '/reading': (BuildContext context) => const ReadingMain(),
           '/tutorial': (BuildContext context) => TutorialScreen(),
+          '/literacy': (BuildContext context) => LiteracyTestScreen(),
+          '/alarm' : (BuildContext context) => const AlarmPage(),
         },
       )
     );
