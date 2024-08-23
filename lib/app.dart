@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:haedal/home/alarm_page.dart';
+import 'package:haedal/home/shop.dart';
 import 'package:haedal/literacy_test/literacy_test.dart';
 import 'package:haedal/theme/theme_manager.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,18 @@ class MyApp extends StatelessWidget {
         // .sh : screenheight     ex: 0.6.sh (screenheight의 0.6배)
         // .sp : fontsize         ex: 12.sp
 
+        /*
+
+        ********************** 화면 전체 패딩 넣을 때 18.0 으로 넣을 것 **********************
+
+                             padding: const EdgeInsets.all(18.0),
+
+         ********************** 화면 전체 패딩 넣을 때 18.0 으로 넣을 것 **********************
+
+         */
+
+
+
         designSize: Size(390, 844), // 기본 사이즈 설정
 
         child: MaterialApp(
@@ -55,6 +68,7 @@ class MyApp extends StatelessWidget {
           '/tutorial': (BuildContext context) => TutorialScreen(),
           '/literacy': (BuildContext context) => LiteracyTestScreen(),
           '/alarm' : (BuildContext context) => const AlarmPage(),
+          '/shop' : (BuildContext context) => const ShopPage(),
         },
       )
     );

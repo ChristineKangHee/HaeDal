@@ -73,6 +73,10 @@ flutter:
     - assets/images/shell.png
     - assets/images/otter.png
     - assets/images/wrapped_gift.png
+    - assets/images/key.png
+    - assets/images/magic_wand.png
+    - assets/images/target.png
+    - assets/images/profile_image.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -46,11 +46,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final customColors = Theme.of(context).extension<CustomColors>()!;
-    final double currentProgress = 5000;
-    final double goal = 10000;
-    double progressPercentage = currentProgress / goal;
-    double remainProgress = goal - currentProgress;
-    // 개별 device 의 width, height 설정
+
+    final double currentProgress = 5000; // 현재 경험치
+    final double goal = 10000; // 경험치 목표치
+    double progressPercentage = currentProgress / goal; // 경험치 퍼센티지
+    double remainProgress = goal - currentProgress; // 목표치까지 남은 경험치
+
+    // 개별 device 의 width, height 설정 (이제 잘 안쓰긴함)
     var screenWidth = MediaQuery.of(context).size.width;
     var screenHeight = MediaQuery.of(context).size.height;
 
@@ -74,12 +76,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     Text("1,391", style: pretendardMedium(context).copyWith(fontSize: 14, color: customColors.gray02),),
                   ],
                 ),
-                Row(
-                  children: [
-                    Image.asset('assets/images/shell.png'),
-                    const SizedBox(width: 7,),
-                    Text("235", style: pretendardMedium(context).copyWith(fontSize: 14, color: customColors.gray02)),
-                  ],
+                GestureDetector(
+                  onTap: () {Navigator.pushNamed(context, '/shop');},
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/shell.png'),
+                      const SizedBox(width: 7,),
+                      Text("235", style: pretendardMedium(context).copyWith(fontSize: 14, color: customColors.gray02)),
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: Icon(Icons.notifications_none_rounded),
@@ -95,11 +100,14 @@ class _MyHomePageState extends State<MyHomePage> {
       ///////                         Body                           ///////
       //////////////////////////////////////////////////////////////////////
       body: SingleChildScrollView(
-        controller: _scrollController,
+        controller: _scrollController, // 스크롤 시 플로팅 버튼 나오게 하기 위함
         child: Container(
-          color: customColors.primary,
+          color: customColors.primary, // 전체 화면 초록색으로 하기 위함
           child: Column(
             children: [
+              //////////////////////////////////////////////////////////////////////
+              ///////                       홈 상단 정보칸                      ///////
+              //////////////////////////////////////////////////////////////////////
               Container(
                 padding: EdgeInsets.fromLTRB(30,15,30,30),
                 decoration: const BoxDecoration(
@@ -115,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     Row(
                       children: [
-                        Image.asset("assets/images/otter.png"),
+                        Image.asset("assets/images/otter.png"), //이미지 추후 파베에서 가져와도 될거같운뎅
                         Padding(
                           padding: const EdgeInsets.fromLTRB(30,0,0,0),
                           child: Column(
@@ -130,6 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                       ],
                     ),
+                    ///////////////////////////////   Progress Bar   ///////////////////////////////
                     Column(
                       children: [
                         Container(
