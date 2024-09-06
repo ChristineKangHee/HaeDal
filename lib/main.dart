@@ -4,8 +4,15 @@ import 'package:provider/provider.dart';
 import 'app_state.dart';
 import 'app.dart';
 import 'theme/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  //////////////////// Firebase 연결 ////////////////////
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   //////////////////// 세로 모드 고정 ////////////////////
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

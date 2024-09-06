@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "910797221125",
+    "project_id": "haedal-b2385",
+    "storage_bucket": "haedal-b2385.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910797221125:android:b8679b480d62b70be9db6c",
+        "android_client_info": {
+          "package_name": "com.example.haedal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "910797221125-3qmh7ksj7nvcdoujagvk25u72segtdgc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7ri0oKMmIeJ2R-ay8HyiiHJSG9bJnQeM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "910797221125-3qmh7ksj7nvcdoujagvk25u72segtdgc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

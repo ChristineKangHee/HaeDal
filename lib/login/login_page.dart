@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:haedal/components/my_divider.dart';
 import 'package:haedal/theme/font.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../app_state.dart';
 import '../components/my_button.dart';
 
@@ -15,6 +17,49 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Google Sign-In
+  Future<UserCredential> signInWithGoogle() async {
+    await GoogleSignIn().signOut();  // 현재 로그인한 계정을 로그아웃
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    // Firestore에 사용자 정보 저장
+    User? user = userCredential.user;
+    if (user != null) {
+      DocumentReference userDoc = _firestore.collection('users').doc(user.uid);
+      DocumentSnapshot docSnapshot = await userDoc.get();
+
+      if (!docSnapshot.exists) {
+        // 문서가 존재하지 않으면 새로 생성
+        await userDoc.set({
+          'name': user.displayName,
+          'email': user.email,
+          'uid': user.uid,
+          'status_message': 'I promise to take the test honestly before GOD.',
+        }, SetOptions(merge: true));
+      } else {
+        // 문서가 존재하면 기존 상태 메시지를 가져옴
+        String statusMessage = docSnapshot['status_message'] ?? 'I promise to take the test honestly before GOD.';
+        await userDoc.set({
+          'name': user.displayName,
+          'email': user.email,
+          'uid': user.uid,
+          'status_message': statusMessage,
+        }, SetOptions(merge: true));
+      }
+    }
+    return userCredential;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -175,12 +220,36 @@ class _LoginPageState extends State<LoginPage> {
                     child: Button(
                       function: () {
                         Navigator.pushNamed(context, '/') ;
+
                         //function 은 상황에 맞게 재 정의 할 것.
                       },
                       title: '로그인',
                       // 버튼 안에 들어갈 텍스트.
                     ),
                   ),
+                  /*
+                  * onPressed: () async {
+                try {
+                  UserCredential userCredential = await signInWithGoogle();
+                  User? user = userCredential.user;
+                  if (user != null) {
+                    print('로그인 성공: ${user.email}');
+                    appState.setUser(user); // 앱 상태에 사용자 설정
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MyHomePage(title: ''), // 홈 화면으로 이동
+                      ),
+                    );
+                  } else {
+                    print('로그인 실패');
+                  }
+                } catch (e) {
+                  print('로그인 오류: $e');
+                }
+              },
+                  *
+                  * */
 
                   SizedBox(height: screenHeight * 0.03),
 

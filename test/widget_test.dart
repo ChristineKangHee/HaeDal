@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:haedal/app.dart';
 
 import 'package:haedal/main.dart';
 
