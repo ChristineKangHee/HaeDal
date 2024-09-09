@@ -4,6 +4,25 @@ import 'home.dart';
 import 'friend/friend_main.dart';
 import 'mypage/mypage_main.dart';
 import 'reading/reading_main.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class AppState with ChangeNotifier {
+  ////////////////// User 세팅 //////////////////
+  User? _user;
+
+  User? get user => _user;
+
+  void setUser(User? user) {
+    _user = user;
+    notifyListeners();
+  }
+
+  void clearUser() {
+    _user = null;
+    notifyListeners();
+  }
+}
+
 
 class NavigationProvider with ChangeNotifier { // Bottom Navigation Bar를 Provider를 통해 전체 상태관리함.
   int _selectedIndex = 0;

@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "910797221125-9tj4iaskqrjk3e7nj3cff30i232bb868.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.haedal",
-            "certificate_hash": "fbb595a6ffdc09ad444ddf6055f2f23309bbf849"
-          }
-        },
-        {
           "client_id": "910797221125-3qmh7ksj7nvcdoujagvk25u72segtdgc.apps.googleusercontent.com",
           "client_type": 3
         }
