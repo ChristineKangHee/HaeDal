@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../app_state.dart';
 import '../components/my_button.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
+
 
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
@@ -61,6 +63,83 @@ class _LoginPageState extends State<LoginPage> {
     }
     return userCredential;
   }
+
+  // Email and Password Sign-In
+  Future<UserCredential?> signInWithEmailPassword(String email, String password) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = userCredential.user;
+
+      if (user != null) {
+        // You can perform additional operations like saving user info to Firestore if necessary
+        print('로그인 성공: ${user.email}');
+        return userCredential;
+      }
+    } on FirebaseAuthException catch (e) {
+      // Error handling for Firebase authentication
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided.');
+      }
+    } catch (e) {
+      print('로그인 오류: $e');
+    }
+
+    return null;
+  }
+
+
+
+  Future<UserCredential?> signInWithFacebook() async {
+
+    try {
+      // Trigger the sign-in flow
+      final LoginResult loginResult = await FacebookAuth.instance.login();
+
+      // Check if login was successful
+      if (loginResult.status == LoginStatus.success && loginResult.accessToken != null) {
+        // Obtain the auth details from the request
+        final OAuthCredential facebookAuthCredential = FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
+
+        // Sign in to Firebase with the Facebook credentials
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(facebookAuthCredential);
+
+        // Get the logged-in user
+        User? user = userCredential.user;
+
+        // Store user data in Firestore if needed
+        if (user != null) {
+          DocumentReference userDoc = _firestore.collection('users').doc(user.uid);
+          DocumentSnapshot docSnapshot = await userDoc.get();
+
+          if (!docSnapshot.exists) {
+            // If document does not exist, create a new one
+            await userDoc.set({
+              'name': user.displayName,
+              'email': user.email,
+              'uid': user.uid,
+              'status_message': 'I promise to take the test honestly before GOD.',
+            }, SetOptions(merge: true));
+          }
+        }
+
+        return userCredential;
+      } else {
+        print('Facebook login failed: No access token received.');
+        return null;
+      }
+    } catch (e) {
+      print('Facebook login error: $e');
+      return null;
+    }
+  }
+
+
 
 
 
@@ -246,9 +325,33 @@ class _LoginPageState extends State<LoginPage> {
                       child: _isLoading
                           ? Center(child: CircularProgressIndicator())
                           : Button(
-                        function: _handleSignIn,
+                        function: () async {
+                          setState(() {
+                            _isLoading = true;  // 로딩 상태 활성화
+                          });
+
+                          String email = _usernameController.text.trim();
+                          String password = _passwordController.text.trim();
+
+                          if (email.isNotEmpty && password.isNotEmpty) {
+                            UserCredential? userCredential = await signInWithEmailPassword(email, password);
+
+                            if (userCredential != null) {
+                              // 로그인 성공 시
+                              appState.setUser(userCredential.user!);
+                              Navigator.pushNamed(context, '/');
+                            }
+                          } else {
+                            print('이메일과 비밀번호를 모두 입력하세요.');
+                          }
+
+                          setState(() {
+                            _isLoading = false;  // 로딩 상태 비활성화
+                          });
+                        },
                         title: '로그인',
-                      ),
+                      )
+
                     ),
                   ],
                 ),
@@ -318,10 +421,31 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(width: 12,),
                       GestureDetector(
                         child: Image.asset('assets/images/facebookicon.png'),
-                        onTap: () {
-                          // function 내용
+                        onTap: () async {
+                          setState(() {
+                            _isLoading = true;  // 로딩 상태 활성화
+                          });
+
+                          try {
+                            UserCredential? userCredential = await signInWithFacebook();
+
+                            if (userCredential != null) {
+                              print('로그인 성공: ${userCredential.user?.email}');
+                              appState.setUser(userCredential.user!); // Set the user in AppState
+                              Navigator.pushNamed(context, '/');
+                            } else {
+                              print('Facebook 로그인 실패');
+                            }
+                          } catch (e) {
+                            print('Facebook 로그인 오류: $e');
+                          } finally {
+                            setState(() {
+                              _isLoading = false;  // 로딩 상태 비활성화
+                            });
+                          }
                         },
-                      )
+                      ),
+
                     ],
                   ),
                 ),
