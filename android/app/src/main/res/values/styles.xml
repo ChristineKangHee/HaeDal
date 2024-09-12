@@ -18,7 +18,6 @@
 <!--    <string name="facebook_app_id">{1597373784457164}</string>-->
 <!--    <string name="facebook_client_token">a4f62d7e9cbf65c78d42c1fa001fde77</string>-->
 
-
     <string name="facebook_app_id">1597373784457164</string>
     <string name="fb_login_protocol_scheme">fb1597373784457164</string>
     <string name="facebook_client_token">a4f62d7e9cbf65c78d42c1fa001fde77</string>

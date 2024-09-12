@@ -60,6 +60,9 @@ dev_dependencies:
   # Facebook Login
   flutter_facebook_auth: ^7.0.0
 
+  # KaKaoTalk Login
+  kakao_flutter_sdk_user: ^1.9.5
+
   # Sign In
   google_sign_in: ^6.2.1
   google_sign_in_web: ^0.12.4
@@ -82,6 +85,7 @@ flutter:
     - assets/images/appleicon.png
     - assets/images/googleidcon.png
     - assets/images/facebookicon.png
+    - assets/images/kakaotalkicon.png
     - assets/images/pencil.png
     - assets/images/star.png
     - assets/images/shell.png

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:haedal/components/my_divider.dart';
 import 'package:haedal/theme/font.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +9,11 @@ import '../app_state.dart';
 import '../components/my_button.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+/*
+import 'package:firebase_auth/firebase_auth.dart'; 랑 충돌이 나고있다.
+그래서 kakao.~~ 로 사용하여 오류가 나지 않게 함
+ */
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -25,7 +31,10 @@ class _LoginPageState extends State<LoginPage> {
   // Firestore instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Google Sign-In
+  //////////////////////////////////////////////////////////////////////
+  ///////                    Google Sign-In                      ///////
+  //////////////////////////////////////////////////////////////////////
+
   Future<UserCredential> signInWithGoogle() async {
     await GoogleSignIn().signOut();  // 현재 로그인한 계정을 로그아웃
     final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -64,7 +73,31 @@ class _LoginPageState extends State<LoginPage> {
     return userCredential;
   }
 
-  // Email and Password Sign-In
+  // Firebase에 사용자 정보를 등록하는 함수
+  Future<void> _registerUserInFirebase(kakao.User kakaoUser) async {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    // Firebase Auth에 사용자 등록
+    UserCredential userCredential = await _auth.signInAnonymously();
+    User? firebaseUser = userCredential.user;
+
+    if (firebaseUser != null) {
+      // Firestore에 사용자 정보 저장
+      DocumentReference userDoc = _firestore.collection('users').doc(firebaseUser.uid);
+      await userDoc.set({
+        'kakaoId': kakaoUser.id,
+        'email': kakaoUser.kakaoAccount?.email,
+        'name': kakaoUser.kakaoAccount?.profile?.nickname,
+        'uid': firebaseUser.uid,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  ///////                      이메일 로그인                        ///////
+  //////////////////////////////////////////////////////////////////////
+
   Future<UserCredential?> signInWithEmailPassword(String email, String password) async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -94,6 +127,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
 
+  //////////////////////////////////////////////////////////////////////
+  ///////                    Facebook Sign-In                    ///////
+  //////////////////////////////////////////////////////////////////////
 
   Future<UserCredential?> signInWithFacebook() async {
 
@@ -149,7 +185,9 @@ class _LoginPageState extends State<LoginPage> {
     var screenWidth = MediaQuery.of(context).size.width;
     var screenHeight = MediaQuery.of(context).size.height;
 
-    // Google 로그인 핸들러
+    //////////////////////////////////////////////////////////////////////
+    ///////            Google Login Function (Handler)             ///////
+    //////////////////////////////////////////////////////////////////////
     Future<void> _handleSignIn() async {
       setState(() {
         _isLoading = true;  // 로딩 상태 활성화
@@ -419,32 +457,100 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                       SizedBox(width: 12,),
+
+
                       GestureDetector(
-                        child: Image.asset('assets/images/facebookicon.png'),
+                        child: Image.asset('assets/images/kakaotalkicon.png'),
                         onTap: () async {
-                          setState(() {
-                            _isLoading = true;  // 로딩 상태 활성화
-                          });
+                          kakao.OAuthToken? token;
+                          // 카카오톡 실행 가능 여부 확인
+                          // 카카오톡 실행이 가능하면 카카오톡으로 로그인, 아니면 카카오계정으로 로그인
+                          if (await kakao.isKakaoTalkInstalled()) {
+                            try {
+                              kakao.OAuthToken token = await kakao.UserApi.instance.loginWithKakaoTalk();
+                              print('카카오톡으로 로그인 성공');
+                              var provider = OAuthProvider('oidc.kakao'); // 제공업체 id
+                              var credential = provider.credential(
+                                idToken: token.idToken, // 카카오 로그인에서 발급된 idToken(카카오 설정에서 OpenID Connect가 활성화 되어있어야함)
+                                accessToken: token.accessToken, // 카카오 로그인에서 발급된 accessToken
+                              );
+                              FirebaseAuth.instance.signInWithCredential(credential);
+                              if (context.mounted) {
+                                Navigator.pushNamed(context, '/');
+                              }
+                            } catch (error) {
+                              print('카카오톡으로 로그인 실패 $error');
 
-                          try {
-                            UserCredential? userCredential = await signInWithFacebook();
-
-                            if (userCredential != null) {
-                              print('로그인 성공: ${userCredential.user?.email}');
-                              appState.setUser(userCredential.user!); // Set the user in AppState
-                              Navigator.pushNamed(context, '/');
-                            } else {
-                              print('Facebook 로그인 실패');
+                              // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
+                              // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
+                              if (error is PlatformException && error.code == 'CANCELED') {
+                                return;
+                              }
+                              // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
+                              try {
+                                kakao.OAuthToken token = await kakao.UserApi.instance.loginWithKakaoAccount();
+                                print('카카오계정으로 로그인 성공');
+                                var provider = OAuthProvider('oidc.kakao'); // 제공업체 id
+                                var credential = provider.credential(
+                                  idToken: token.idToken, // 카카오 로그인에서 발급된 idToken(카카오 설정에서 OpenID Connect가 활성화 되어있어야함)
+                                  accessToken: token.accessToken, // 카카오 로그인에서 발급된 accessToken
+                                );
+                                FirebaseAuth.instance.signInWithCredential(credential);
+                                if (context.mounted) {
+                                  Navigator.pushNamed(context, '/');
+                                }
+                              } catch (error) {
+                                print('카카오계정으로 로그인 실패 $error');
+                              }
                             }
-                          } catch (e) {
-                            print('Facebook 로그인 오류: $e');
-                          } finally {
-                            setState(() {
-                              _isLoading = false;  // 로딩 상태 비활성화
-                            });
+                          } else {
+                            try {
+                              kakao.OAuthToken token = await kakao.UserApi.instance.loginWithKakaoAccount();
+                              print('카카오계정으로 로그인 성공');
+                              var provider = OAuthProvider('oidc.kakao'); // 제공업체 id
+                              var credential = provider.credential(
+                                idToken: token.idToken, // 카카오 로그인에서 발급된 idToken(카카오 설정에서 OpenID Connect가 활성화 되어있어야함)
+                                accessToken: token.accessToken, // 카카오 로그인에서 발급된 accessToken
+                              );
+                              FirebaseAuth.instance.signInWithCredential(credential);
+                              if (context.mounted) {
+                                Navigator.pushNamed(context, '/');
+                              }
+                            } catch (error) {
+                              print('카카오계정으로 로그인 실패 $error');
+                            }
                           }
                         },
                       ),
+
+
+                      // FaceBook Login 구현. 추후 사용 가능
+                      // GestureDetector(
+                      //   child: Image.asset('assets/images/facebookicon.png'),
+                      //   onTap: () async {
+                      //     setState(() {
+                      //       _isLoading = true;  // 로딩 상태 활성화
+                      //     });
+                      //
+                      //     try {
+                      //       UserCredential? userCredential = await signInWithFacebook();
+                      //
+                      //       if (userCredential != null) {
+                      //         print('로그인 성공: ${userCredential.user?.email}');
+                      //         appState.setUser(userCredential.user!); // Set the user in AppState
+                      //         Navigator.pushNamed(context, '/');
+                      //       } else {
+                      //         print('Facebook 로그인 실패');
+                      //       }
+                      //     } catch (e) {
+                      //       print('Facebook 로그인 오류: $e');
+                      //     } finally {
+                      //       setState(() {
+                      //         _isLoading = false;  // 로딩 상태 비활성화
+                      //       });
+                      //     }
+                      //   },
+                      // ),
 
                     ],
                   ),
